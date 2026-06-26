@@ -64,6 +64,22 @@ tail -50 /var/log/weather-forecast.log
 
 Node 43172 also has hourly time announcements via `/etc/asterisk/local/hellotime.sh` using `rpt cmd 43172 status 12 xxx`. No root crontab; all jobs in `/etc/cron.d/`.
 
+## GitHub repo and web player
+
+Repo: `G1LRO/gb3gu-maritime-forecast`
+
+GitHub Pages site at `docs/index.html` provides a web-based player for the sample WAV files.
+
+| Repo path | Purpose |
+|-----------|---------|
+| `weather-forecast.py` | Main script (keep in sync with `/usr/local/bin/weather-forecast.py`) |
+| `CLAUDE.md` | This context file |
+| `samples/forecast-sample.wav` | Latest forecast audio (played by the web player) |
+| `samples/outlook-sample.wav` | Latest outlook audio (played by the web player) |
+| `docs/index.html` | GitHub Pages web player — references `../samples/*.wav` |
+
+**Important**: WAV samples live in `samples/` — do not put them anywhere else or the web player breaks. After any script change that affects the announcement text, regenerate both WAVs and push all three files (`weather-forecast.py`, `samples/forecast-sample.wav`, `samples/outlook-sample.wav`).
+
 ## Existing ASL3 repo reference
 
 Similar project (for reference, not used here): `Saytime-Weather-TimeFormat-ASL3`

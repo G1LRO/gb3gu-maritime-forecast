@@ -24,7 +24,7 @@ TYPES = {
         "output": "/var/lib/asterisk/sounds/custom/forecast",
         "intro": "Good morning, here is the Channel Islands 24 hour maritime forecast.",
         "temp_day": "today",
-        "temp_label": "The Guernsey land forecast",
+        "temp_label": "The Guernsey inland forecast",
     },
     "outlook": {
         "div_class": "outlook-block",
@@ -32,7 +32,7 @@ TYPES = {
         "output": "/var/lib/asterisk/sounds/custom/outlook",
         "intro": "Good evening, here is the Channel Islands outlook for the following 24 hours.",
         "temp_day": "tomorrow",
-        "temp_label": "Tomorrow's land forecast",
+        "temp_label": "Tomorrow's inland forecast",
     },
 }
 

@@ -11,10 +11,10 @@ Inspired by [Saytime-Weather-TimeFormat-ASL3](https://github.com/G1LRO/Saytime-W
 
 ## Sample audio
 
-Listen to what it sounds like on air:
+**[Listen online &rarr;](https://g1lro.github.io/gb3gu-maritime-forecast/)** (plays in your browser)
 
-- [Morning forecast sample](samples/forecast-sample.wav)
-- [Evening outlook sample](samples/outlook-sample.wav)
+- Morning forecast sample: [`samples/forecast-sample.wav`](samples/forecast-sample.wav)
+- Evening outlook sample: [`samples/outlook-sample.wav`](samples/outlook-sample.wav)
 
 ---
 

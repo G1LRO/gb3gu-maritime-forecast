@@ -9,6 +9,15 @@ Inspired by [Saytime-Weather-TimeFormat-ASL3](https://github.com/G1LRO/Saytime-W
 
 ---
 
+## Sample audio
+
+Listen to what it sounds like on air:
+
+- [Morning forecast sample](samples/forecast-sample.wav)
+- [Evening outlook sample](samples/outlook-sample.wav)
+
+---
+
 ## Requirements
 
 - ASL3 node running on Debian 12 (Bookworm)
@@ -47,13 +56,13 @@ sudo cp -r piper/espeak-ng-data/* /usr/local/lib/piper/espeak-ng-data/
 Create a wrapper script to isolate Piper's libraries:
 
 ```bash
-sudo tee /usr/local/bin/piper-speak << 'EOF'
+sudo tee /usr/local/bin/piper-speak << 'WEOF'
 #!/bin/bash
 exec env \
   LD_LIBRARY_PATH=/usr/local/lib/piper \
   ESPEAK_DATA_PATH=/usr/local/lib/piper/espeak-ng-data \
   /usr/local/bin/piper "$@"
-EOF
+WEOF
 sudo chmod 755 /usr/local/bin/piper-speak
 ```
 
@@ -85,11 +94,11 @@ sudo mkdir -p /var/lib/asterisk/sounds/custom
 ### 6. Set up cron
 
 ```bash
-sudo tee /etc/cron.d/weather-forecast << 'EOF'
+sudo tee /etc/cron.d/weather-forecast << 'EOF2'
 # Channel Islands maritime forecast announcements
 30 7  * * * root /usr/bin/python3 /usr/local/bin/weather-forecast.py --type forecast >> /var/log/weather-forecast.log 2>&1
 30 19 * * * root /usr/bin/python3 /usr/local/bin/weather-forecast.py --type outlook  >> /var/log/weather-forecast.log 2>&1
-EOF
+EOF2
 ```
 
 ---

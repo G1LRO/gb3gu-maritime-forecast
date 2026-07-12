@@ -100,6 +100,7 @@ echo ""
 echo "=== 6. Cron ==="
 tee /etc/cron.d/weather-forecast > /dev/null << EOF2
 # Channel Islands maritime forecast announcements
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 30 7  * * * root /usr/bin/python3 /usr/local/bin/weather-forecast.py --type forecast >> /var/log/weather-forecast.log 2>&1
 30 12 * * * root /usr/bin/python3 /usr/local/bin/weather-forecast.py --type midday   >> /var/log/weather-forecast.log 2>&1
 30 19 * * * root /usr/bin/python3 /usr/local/bin/weather-forecast.py --type outlook  >> /var/log/weather-forecast.log 2>&1

@@ -26,6 +26,14 @@ TYPES = {
         "temp_day": "today",
         "temp_label": "The Guernsey inland forecast",
     },
+    "midday": {
+        "div_class": "forecast-block",
+        "strip_pattern": r"24 hour forecast:\s*",
+        "output": "/var/lib/asterisk/sounds/custom/midday",
+        "intro": "Good afternoon, here is the Channel Islands 24 hour maritime forecast.",
+        "temp_day": "today",
+        "temp_label": "The Guernsey inland forecast",
+    },
     "outlook": {
         "div_class": "outlook-block",
         "strip_pattern": r"Outlook for the following 24 hours:\s*",
@@ -260,7 +268,7 @@ def play(node, output_path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--type", choices=["forecast", "outlook"], default="forecast")
+    parser.add_argument("--type", choices=["forecast", "midday", "outlook"], default="forecast")
     args = parser.parse_args()
 
     try:

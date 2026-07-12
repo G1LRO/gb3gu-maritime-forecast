@@ -14,6 +14,7 @@ URL_GOVGG = "https://www.gov.gg/weather"
 NODE = "43172"
 PIPER = "/usr/local/bin/piper-speak"
 VOICE = "/usr/local/share/piper-voices/en_GB-jenny_dioco-medium.onnx"
+ASTERISK = "/usr/sbin/asterisk"
 MIN_TEXT_WORDS = 10
 MIN_AUDIO_BYTES = 50_000
 
@@ -257,7 +258,7 @@ def _cleanup(path):
 
 def play(node, output_path):
     subprocess.run(
-        ["asterisk", "-rx", f"rpt localplay {node} {output_path}"],
+        [ASTERISK, "-rx", f"rpt localplay {node} {output_path}"],
         check=True,
     )
 

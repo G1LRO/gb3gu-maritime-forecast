@@ -77,6 +77,7 @@ GitHub Pages site at `docs/index.html` provides a web-based player for the sampl
 | Repo path | Purpose |
 |-----------|---------|
 | `weather-forecast.py` | Main script (keep in sync with `/usr/local/bin/weather-forecast.py`) |
+| `install.sh` | Automated installer: `sudo ./install.sh <NODE_NUMBER>`. Copies `weather-forecast.py` and patches its `NODE` line via `sed` to match the argument — keep this in sync with any changes to the `NODE = "..."` line format in `weather-forecast.py`. |
 | `CLAUDE.md` | This context file |
 | `samples/forecast-sample.wav` | Latest forecast audio (played by the web player) |
 | `samples/outlook-sample.wav` | Latest outlook audio (played by the web player) |

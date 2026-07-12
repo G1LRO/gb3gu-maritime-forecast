@@ -15,6 +15,7 @@ Inspired by [Saytime-Weather-TimeFormat-ASL3](https://github.com/G1LRO/Saytime-W
 **[Listen online &rarr;](https://g1lro.github.io/gb3gu-maritime-forecast/)** (plays in your browser)
 
 - Morning forecast sample: [`samples/forecast-sample.wav`](samples/forecast-sample.wav)
+- Midday forecast sample: [`samples/midday-sample.wav`](samples/midday-sample.wav)
 - Evening outlook sample: [`samples/outlook-sample.wav`](samples/outlook-sample.wav)
 
 ---

@@ -84,10 +84,11 @@ GitHub Pages site at `docs/index.html` provides a web-based player for the sampl
 | `install.sh` | Automated installer: `sudo ./install.sh <NODE_NUMBER>`. Copies `weather-forecast.py` and patches its `NODE` line via `sed` to match the argument — keep this in sync with any changes to the `NODE = "..."` line format in `weather-forecast.py`. |
 | `CLAUDE.md` | This context file |
 | `samples/forecast-sample.wav` | Latest forecast audio (played by the web player) |
+| `samples/midday-sample.wav` | Latest midday audio (played by the web player) |
 | `samples/outlook-sample.wav` | Latest outlook audio (played by the web player) |
-| `docs/index.html` | GitHub Pages web player — references `../samples/*.wav` |
+| `docs/index.html` | GitHub Pages web player — each `<audio>` `src` is an absolute `raw.githubusercontent.com/.../main/samples/...` URL (not a relative path — the site is served with `docs/` as its root, so a relative `../samples/...` would resolve outside the site and 404) |
 
-**Important**: WAV samples live in `samples/` — do not put them anywhere else or the web player breaks. After any script change that affects the announcement text, regenerate both WAVs and push all three files (`weather-forecast.py`, `samples/forecast-sample.wav`, `samples/outlook-sample.wav`).
+**Important**: WAV samples live in `samples/` — do not put them anywhere else or the web player breaks. After any script change that affects the announcement text, regenerate all three WAVs and push all four files (`weather-forecast.py`, `samples/forecast-sample.wav`, `samples/midday-sample.wav`, `samples/outlook-sample.wav`).
 
 ## Existing ASL3 repo reference
 

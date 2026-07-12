@@ -1,8 +1,9 @@
 # GB3GU Maritime Forecast
 
-Announces the **Channel Islands inshore waters forecast** from the [Met Office](https://weather.metoffice.gov.uk/specialist-forecasts/coast-and-sea/print/inshore-waters-forecast) on an [AllStarLink 3 (ASL3)](https://allstarlink.org) node, twice daily:
+Announces the **Channel Islands inshore waters forecast** from the [Met Office](https://weather.metoffice.gov.uk/specialist-forecasts/coast-and-sea/print/inshore-waters-forecast) on an [AllStarLink 3 (ASL3)](https://allstarlink.org) node, three times daily:
 
 - **07:30** — *"Good morning, here is the Channel Islands 24 hour maritime forecast…"*
+- **12:30** — *"Good afternoon, here is the Channel Islands 24 hour maritime forecast…"*
 - **19:30** — *"Good evening, here is the Channel Islands outlook for the following 24 hours…"*
 
 Inspired by [Saytime-Weather-TimeFormat-ASL3](https://github.com/G1LRO/Saytime-Weather-TimeFormat-ASL3).
@@ -58,13 +59,17 @@ Create a wrapper script to isolate Piper's libraries:
 ```bash
 sudo tee /usr/local/bin/piper-speak << 'WEOF'
 #!/bin/bash
-exec env \
+env \
   LD_LIBRARY_PATH=/usr/local/lib/piper \
   ESPEAK_DATA_PATH=/usr/local/lib/piper/espeak-ng-data \
   /usr/local/bin/piper "$@"
 WEOF
 sudo chmod 755 /usr/local/bin/piper-speak
 ```
+
+> **Note:** earlier versions of this script used `exec env ...`. If that line is ever run directly at an
+> interactive shell prompt (rather than as the `piper-speak` script file), `exec` replaces the current
+> shell process, and the terminal session closes as soon as Piper exits. Plain `env` avoids that.
 
 ### 3. Download the voice model
 
@@ -97,6 +102,7 @@ sudo mkdir -p /var/lib/asterisk/sounds/custom
 sudo tee /etc/cron.d/weather-forecast << 'EOF2'
 # Channel Islands maritime forecast announcements
 30 7  * * * root /usr/bin/python3 /usr/local/bin/weather-forecast.py --type forecast >> /var/log/weather-forecast.log 2>&1
+30 12 * * * root /usr/bin/python3 /usr/local/bin/weather-forecast.py --type midday   >> /var/log/weather-forecast.log 2>&1
 30 19 * * * root /usr/bin/python3 /usr/local/bin/weather-forecast.py --type outlook  >> /var/log/weather-forecast.log 2>&1
 EOF2
 ```
@@ -108,6 +114,9 @@ EOF2
 ```bash
 # Morning forecast
 sudo python3 /usr/local/bin/weather-forecast.py --type forecast
+
+# Midday forecast
+sudo python3 /usr/local/bin/weather-forecast.py --type midday
 
 # Evening outlook
 sudo python3 /usr/local/bin/weather-forecast.py --type outlook

@@ -64,6 +64,10 @@ sudo python3 /usr/local/bin/weather-forecast.py --type outlook
 tail -50 /var/log/weather-forecast.log
 ```
 
+## Gotchas
+
+- **`asterisk` binary and cron `PATH`**: `asterisk` lives in `/usr/sbin`, which is on an interactive shell's `PATH` but not on cron's default (`/usr/bin:/bin` — `cron.d` files do *not* inherit `/etc/crontab`'s `PATH=` line, that only applies to entries literally inside `/etc/crontab`). A manual test always "works" even when the cron job silently fails with `[Errno 2] No such file or directory: 'asterisk'`. Fixed by calling `asterisk` via an absolute path (`ASTERISK = "/usr/sbin/asterisk"` in `weather-forecast.py`) and by setting `PATH=` explicitly in `/etc/cron.d/weather-forecast` (belt and braces). `sox` doesn't need this — it lives in `/usr/bin`, which cron's default PATH does cover.
+
 ## Node context
 
 Node 43172 also has hourly time announcements via `/etc/asterisk/local/hellotime.sh` using `rpt cmd 43172 status 12 xxx`. No root crontab; all jobs in `/etc/cron.d/`.

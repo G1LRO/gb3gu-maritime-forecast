@@ -32,6 +32,22 @@ Inspired by [Saytime-Weather-TimeFormat-ASL3](https://github.com/G1LRO/Saytime-W
 
 ## Installation
 
+### Quick install
+
+`install.sh` automates steps 1–6 below on a fresh ASL3 / Debian 12 (Bookworm) image:
+
+```bash
+sudo ./install.sh <NODE_NUMBER>
+```
+
+It installs the system packages, Piper TTS, the voice model, `weather-forecast.py` (with `NODE`
+patched to the number you pass), the output directory, and the cron jobs. The node must already be
+set up via `asl-menu` (the `rpt.conf` / `simpleusb.conf` stanzas for it need to exist first). Safe
+to re-run — already-installed packages, the Piper binary, and the voice model are skipped if present.
+
+Use the manual steps below instead if you want to customise the install or see exactly what each
+step does.
+
 ### 1. Install system packages
 
 ```bash

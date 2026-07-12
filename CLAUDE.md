@@ -4,11 +4,12 @@
 
 Fetches the Channel Islands inshore waters forecast from the Met Office and the Guernsey land temperature from gov.gg, generates a TTS announcement with Piper, and plays it on ASL3 node 43172.
 
-Two announcement types, each run by a cron job:
+Three announcement types, each run by a cron job:
 
 | Type | Cron | Audio file | Content |
 |------|------|------------|---------|
 | `forecast` | 07:30 daily | `/var/lib/asterisk/sounds/custom/forecast.wav` | 24-hour maritime forecast + today's temperature |
+| `midday` | 12:30 daily | `/var/lib/asterisk/sounds/custom/midday.wav` | Same 24-hour maritime forecast + today's temperature, "Good afternoon" intro |
 | `outlook` | 19:30 daily | `/var/lib/asterisk/sounds/custom/outlook.wav` | Outlook for following 24 hours + tomorrow's temperature |
 
 ## Key files
@@ -16,7 +17,7 @@ Two announcement types, each run by a cron job:
 | Path | Purpose |
 |------|---------|
 | `/usr/local/bin/weather-forecast.py` | Main script |
-| `/etc/cron.d/weather-forecast` | Cron jobs (07:30 forecast, 19:30 outlook) |
+| `/etc/cron.d/weather-forecast` | Cron jobs (07:30 forecast, 12:30 midday, 19:30 outlook) |
 | `/usr/local/bin/piper-speak` | Piper TTS wrapper (sets LD_LIBRARY_PATH, ESPEAK_DATA_PATH) |
 | `/usr/local/lib/piper/` | Piper shared libs (isolated to avoid clash with system espeak-ng 1.51) |
 | `/usr/local/share/piper-voices/en_GB-jenny_dioco-medium.onnx` | Voice model (61 MB, female British English) |
@@ -41,7 +42,7 @@ Two announcement types, each run by a cron job:
 ```
 announcement text → piper (--output-raw, 22050 Hz signed 16-bit mono)
                   → sox (resample to 8000 Hz mono WAV)
-                  → /var/lib/asterisk/sounds/custom/{forecast,outlook}.wav
+                  → /var/lib/asterisk/sounds/custom/{forecast,midday,outlook}.wav
                   → asterisk -rx "rpt localplay 43172 <path>"
 ```
 
@@ -52,6 +53,9 @@ Atomic write: sox writes to `{output}.tmp.wav`, replaced with `os.replace()` onl
 ```bash
 # Test morning announcement
 sudo python3 /usr/local/bin/weather-forecast.py --type forecast
+
+# Test midday announcement
+sudo python3 /usr/local/bin/weather-forecast.py --type midday
 
 # Test evening announcement
 sudo python3 /usr/local/bin/weather-forecast.py --type outlook

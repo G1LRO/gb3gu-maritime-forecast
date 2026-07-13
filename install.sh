@@ -32,7 +32,7 @@ esac
 
 echo "=== 1. System packages ==="
 apt-get update -qq
-apt-get install -y sox espeak-ng python3-requests
+apt-get install -y sox espeak-ng python3-requests watchdog
 
 echo ""
 echo "=== 2. Piper TTS ==="
@@ -98,15 +98,41 @@ echo "  /var/lib/asterisk/sounds/custom ready"
 
 echo ""
 echo "=== 6. Cron ==="
+# timeout: safety net against any hang (piper, sox, asterisk, network) blocking the node
+# indefinitely — kills the whole run after 120s, well over the ~30-45s a normal run takes.
 tee /etc/cron.d/weather-forecast > /dev/null << EOF2
 # Channel Islands maritime forecast announcements
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-30 7  * * * root /usr/bin/python3 /usr/local/bin/weather-forecast.py --type forecast >> /var/log/weather-forecast.log 2>&1
-30 12 * * * root /usr/bin/python3 /usr/local/bin/weather-forecast.py --type midday   >> /var/log/weather-forecast.log 2>&1
-30 19 * * * root /usr/bin/python3 /usr/local/bin/weather-forecast.py --type outlook  >> /var/log/weather-forecast.log 2>&1
+30 7  * * * root timeout 120 /usr/bin/python3 /usr/local/bin/weather-forecast.py --type forecast >> /var/log/weather-forecast.log 2>&1
+30 12 * * * root timeout 120 /usr/bin/python3 /usr/local/bin/weather-forecast.py --type midday   >> /var/log/weather-forecast.log 2>&1
+30 19 * * * root timeout 120 /usr/bin/python3 /usr/local/bin/weather-forecast.py --type outlook  >> /var/log/weather-forecast.log 2>&1
 EOF2
 chmod 644 /etc/cron.d/weather-forecast
 echo "  cron jobs installed (07:30 forecast, 12:30 midday, 19:30 outlook)"
+
+echo ""
+echo "=== 7. Hardware watchdog ==="
+# Not a fix for any specific bug — a safety net so a real kernel/USB lockup self-recovers
+# within seconds instead of needing someone to notice and power-cycle the node. Deliberately
+# no load/memory-based triggers: this node legitimately spikes CPU during piper synthesis,
+# and a load-average trigger would treat normal operation as a hang.
+tee /etc/watchdog.conf > /dev/null << 'EOF3'
+watchdog-device = /dev/watchdog
+watchdog-timeout = 15
+interval = 4
+EOF3
+# run_wd_keepalive=1 is Debian's default: it makes watchdog.service's stop hook deliberately
+# fail so a companion wd_keepalive.service takes over petting on any stop. We just want the
+# one daemon running plainly — that handoff quirk otherwise cancels `restart`'s start half.
+sed -i 's/^run_wd_keepalive=.*/run_wd_keepalive=0/' /etc/default/watchdog
+systemctl enable watchdog >/dev/null 2>&1
+systemctl restart watchdog
+sleep 1
+systemctl is-active --quiet watchdog || {
+    echo "  ERROR: watchdog service did not start" >&2
+    exit 1
+}
+echo "  watchdog enabled (device=/dev/watchdog, timeout=15s, pet every 4s)"
 
 echo ""
 echo "=== Done ==="

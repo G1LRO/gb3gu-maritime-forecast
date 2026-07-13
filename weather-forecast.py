@@ -17,6 +17,13 @@ NODE = "43172"
 PIPER = "/usr/local/bin/piper-speak"
 VOICE = "/usr/local/share/piper-voices/en_GB-jenny_dioco-medium.onnx"
 ASTERISK = "/usr/sbin/asterisk"
+# Tried pinning piper off one core + `nice -19` on 2026-07-13 to relieve dwc_otg FIQ/USB
+# interrupt starvation during piper's CPU-heavy inference (see CLAUDE.md gotchas). Reverted:
+# a stuck manual test overran into the next cron firing, and nice -19 caused severe starvation
+# between the two overlapping piper processes — both stalled for over an hour and the midday
+# announcement was missed entirely, worse than the problem it was meant to fix. Concurrent
+# invocations shouldn't happen in normal operation; if trying this again, test a much milder
+# niceness first.
 MIN_TEXT_WORDS = 10
 MIN_AUDIO_BYTES = 50_000
 

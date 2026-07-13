@@ -6,6 +6,8 @@ import os
 import subprocess
 import re
 import argparse
+import time
+import traceback
 import requests
 from html.parser import HTMLParser
 
@@ -44,6 +46,36 @@ TYPES = {
         "temp_label": "Tomorrow's inland forecast",
     },
 }
+
+
+def log(msg, file=sys.stdout):
+    """Timestamped, immediately-flushed log line — cron redirects stdout/stderr to a file,
+    which is block-buffered by default; without flush=True, output can sit in the buffer
+    and be lost entirely if the process is killed (OOM, segfault) before a normal exit."""
+    ts = time.strftime("%Y-%m-%d %H:%M:%S")
+    print(f"{ts} {msg}", file=file, flush=True)
+
+
+def mem_snapshot(label):
+    try:
+        info = {}
+        with open("/proc/meminfo") as f:
+            for line in f:
+                k, v = line.split(":", 1)
+                info[k] = v.strip()
+        log(f"MEM [{label}]: MemAvailable={info.get('MemAvailable', '?')} "
+            f"MemFree={info.get('MemFree', '?')}")
+    except Exception as e:
+        log(f"MEM [{label}]: snapshot failed: {e}")
+
+
+def throttle_snapshot(label):
+    try:
+        result = subprocess.run(["vcgencmd", "get_throttled"], capture_output=True,
+                                 text=True, timeout=5)
+        log(f"THROTTLE [{label}]: {result.stdout.strip() or result.stderr.strip()}")
+    except Exception as e:
+        log(f"THROTTLE [{label}]: snapshot failed: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -202,6 +234,12 @@ def fetch_temperature(day):
 # Audio
 # ---------------------------------------------------------------------------
 
+def _describe_exit(returncode):
+    if returncode < 0:
+        return f"code {returncode} (killed by signal {-returncode})"
+    return f"code {returncode}"
+
+
 def speak(announcement_type, maritime_text, temp_sentence):
     cfg = TYPES[announcement_type]
     parts = [cfg["intro"], maritime_text]
@@ -212,31 +250,47 @@ def speak(announcement_type, maritime_text, temp_sentence):
     output_path = cfg["output"]
     tmp_path = f"{output_path}.tmp.wav"
 
+    mem_snapshot("before piper")
+    throttle_snapshot("before piper")
+    log(f"Starting piper (announcement is {len(announcement)} chars)")
+
     piper = subprocess.Popen(
         [PIPER, "--model", VOICE, "--output-raw"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
     )
     sox = subprocess.Popen(
         ["sox", "-t", "raw", "-r", "22050", "-e", "signed-integer", "-b", "16", "-c", "1", "-",
          "-r", "8000", "-c", "1", tmp_path],
         stdin=piper.stdout,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
     piper.stdout.close()
     piper.stdin.write(announcement.encode())
     piper.stdin.close()
+
+    piper_stderr = piper.stderr.read()
     piper.wait()
-    sox.wait()
+    log(f"piper exited: {_describe_exit(piper.returncode)}")
+    if piper_stderr:
+        log(f"piper stderr: {piper_stderr.decode(errors='replace').strip()}")
+
+    sox_stdout, sox_stderr = sox.communicate()
+    log(f"sox exited: {_describe_exit(sox.returncode)}")
+    if sox_stderr:
+        log(f"sox stderr: {sox_stderr.decode(errors='replace').strip()}")
+
+    mem_snapshot("after piper/sox")
+    throttle_snapshot("after piper/sox")
 
     if piper.returncode != 0:
         _cleanup(tmp_path)
-        raise RuntimeError(f"piper failed (code {piper.returncode})")
+        raise RuntimeError(f"piper failed ({_describe_exit(piper.returncode)})")
     if sox.returncode != 0:
         _cleanup(tmp_path)
-        raise RuntimeError(f"sox failed (code {sox.returncode})")
+        raise RuntimeError(f"sox failed ({_describe_exit(sox.returncode)})")
 
     size = os.path.getsize(tmp_path) if os.path.exists(tmp_path) else 0
     if size < MIN_AUDIO_BYTES:
@@ -272,26 +326,38 @@ def main():
     parser.add_argument("--type", choices=["forecast", "midday", "outlook"], default="forecast")
     args = parser.parse_args()
 
+    log(f"=== run starting: type={args.type} pid={os.getpid()} ===")
+    mem_snapshot("run start")
+    throttle_snapshot("run start")
+
     try:
         maritime = fetch_maritime(args.type)
+        log("Maritime forecast fetched OK")
     except Exception as e:
-        print(f"ERROR (maritime fetch): {e}", file=sys.stderr)
+        log(f"ERROR (maritime fetch): {e}", file=sys.stderr)
+        log(traceback.format_exc(), file=sys.stderr)
         sys.exit(1)
 
     cfg = TYPES[args.type]
     temp = fetch_temperature(cfg["temp_day"])
     if temp is None:
-        print("WARNING: gov.gg temperature unavailable — announcing without it", file=sys.stderr)
+        log("WARNING: gov.gg temperature unavailable — announcing without it", file=sys.stderr)
+    else:
+        log("Temperature fetched OK")
 
     try:
         output_path = speak(args.type, maritime, temp)
+        log("speak() completed OK, calling asterisk to play")
         play(NODE, output_path)
-        print(f"OK [{args.type}]: {maritime[:80]}...")
+        log(f"OK [{args.type}]: {maritime[:80]}...")
         if temp:
-            print(f"   temp: {temp}")
+            log(f"   temp: {temp}")
     except Exception as e:
-        print(f"ERROR: {e}", file=sys.stderr)
+        log(f"ERROR: {e}", file=sys.stderr)
+        log(traceback.format_exc(), file=sys.stderr)
         sys.exit(1)
+
+    log(f"=== run finished OK: type={args.type} ===")
 
 
 if __name__ == "__main__":

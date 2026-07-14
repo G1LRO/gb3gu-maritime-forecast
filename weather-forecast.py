@@ -85,6 +85,25 @@ def throttle_snapshot(label):
         log(f"THROTTLE [{label}]: snapshot failed: {e}")
 
 
+def channel_snapshot(label):
+    """Log whether the repeater is actively receiving RF right now (COS/"Signal on
+    input"), plus today's keyup/TX-time counters — to check whether crashes correlate
+    with the node being mid-transmission from another station when we try to announce."""
+    try:
+        result = subprocess.run([ASTERISK, "-rx", f"rpt stats {NODE}"], capture_output=True,
+                                 text=True, timeout=10)
+        out = result.stdout
+        signal = next((l.split(":", 1)[1].strip() for l in out.splitlines()
+                        if l.startswith("Signal on input")), "?")
+        keyups = next((l.split(":", 1)[1].strip() for l in out.splitlines()
+                        if l.startswith("Keyups today")), "?")
+        tx_time = next((l.split(":", 1)[1].strip() for l in out.splitlines()
+                         if l.startswith("TX time today")), "?")
+        log(f"CHANNEL [{label}]: signal_on_input={signal} keyups_today={keyups} tx_time_today={tx_time}")
+    except Exception as e:
+        log(f"CHANNEL [{label}]: snapshot failed: {e}")
+
+
 # ---------------------------------------------------------------------------
 # Met Office parser
 # ---------------------------------------------------------------------------
@@ -259,6 +278,7 @@ def speak(announcement_type, maritime_text, temp_sentence):
 
     mem_snapshot("before piper")
     throttle_snapshot("before piper")
+    channel_snapshot("before piper")
     log(f"Starting piper (announcement is {len(announcement)} chars)")
 
     piper = subprocess.Popen(
@@ -291,6 +311,7 @@ def speak(announcement_type, maritime_text, temp_sentence):
 
     mem_snapshot("after piper/sox")
     throttle_snapshot("after piper/sox")
+    channel_snapshot("after piper/sox")
 
     if piper.returncode != 0:
         _cleanup(tmp_path)
@@ -318,10 +339,13 @@ def _cleanup(path):
 
 
 def play(node, output_path):
+    log(f"play(): invoking asterisk rpt localplay {node} {output_path}")
     subprocess.run(
         [ASTERISK, "-rx", f"rpt localplay {node} {output_path}"],
         check=True,
     )
+    log("play(): asterisk CLI call returned (dispatch only — actual RF playback happens "
+        "asynchronously inside asterisk, this does not confirm the audio finished transmitting)")
 
 
 # ---------------------------------------------------------------------------
@@ -336,6 +360,7 @@ def main():
     log(f"=== run starting: type={args.type} pid={os.getpid()} ===")
     mem_snapshot("run start")
     throttle_snapshot("run start")
+    channel_snapshot("run start")
 
     try:
         maritime = fetch_maritime(args.type)
@@ -355,7 +380,9 @@ def main():
     try:
         output_path = speak(args.type, maritime, temp)
         log("speak() completed OK, calling asterisk to play")
+        channel_snapshot("before play")
         play(NODE, output_path)
+        channel_snapshot("after play")
         log(f"OK [{args.type}]: {maritime[:80]}...")
         if temp:
             log(f"   temp: {temp}")

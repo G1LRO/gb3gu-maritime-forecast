@@ -78,6 +78,14 @@ tail -50 /var/log/weather-forecast.log
 
 Node 43172 also has hourly time announcements via `/etc/asterisk/local/hellotime.sh` using `rpt cmd 43172 status 12 xxx`. No root crontab; all jobs in `/etc/cron.d/`.
 
+## Repeater-collision theory (2026-07-14, being tested)
+
+Theory: crashes might correlate with the node actively receiving RF (another station transmitting/using the repeater) at the moment the script tries to broadcast — a conflict between the automated announcement's PTT and real repeater traffic, rather than (or in addition to) the CPU/thermal/USB mechanism in the Gotchas section above.
+
+`channel_snapshot()` in `weather-forecast.py` queries `asterisk -rx "rpt stats <NODE>"` and logs `signal_on_input` (COS/is-the-repeater-currently-receiving-RF), plus `keyups_today` and `tx_time_today` as sanity-check counters, at five points: run start, before piper, after piper/sox, before `play()`, and after `play()`. Confirmed working via `keyups_today` incrementing exactly at "after play" in test runs (both on this node and the local test node) — the metric does track real activity, not just idle noise.
+
+Also worth knowing: `play()`'s call to `asterisk -rx "rpt localplay ..."` only *dispatches* playback — the CLI command returning success does not mean the audio has finished actually transmitting over RF. That happens asynchronously inside Asterisk's own process, which this script has no visibility into once the CLI call returns. So "OK [type]: ..." in the log means the dispatch succeeded, not necessarily that the full broadcast completed before a subsequent crash. Checked Asterisk's own `/var/log/asterisk/messages.log` for evidence of past crashes: it doesn't help — the file is fresh-started by `asterisk.service` on every boot, so it never contains anything from before a crash, only that boot's own startup sequence.
+
 ## GitHub repo and web player
 
 Repo: `G1LRO/gb3gu-maritime-forecast`

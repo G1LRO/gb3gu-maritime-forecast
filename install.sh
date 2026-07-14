@@ -135,6 +135,33 @@ systemctl is-active --quiet watchdog || {
 echo "  watchdog enabled (device=/dev/watchdog, timeout=15s, pet every 4s)"
 
 echo ""
+echo "=== 8. dwc_otg USB FIQ fix (Raspberry Pi 2/3 stability) ==="
+# Known Raspberry Pi kernel bug (raspberrypi/linux#6172): the dwc_otg USB
+# driver's FIQ-based interrupt servicing gets starved under sustained high
+# CPU load (piper synthesis is exactly that), causing `FIQ reported NYET` /
+# `FIQ timed out` USB failures and full system freezes on Pi 3B and earlier.
+# Confirmed as the root cause of gb3gu's recurring crashes around scheduled
+# broadcasts (2026-07-14) and fixed by disabling FIQ via boot cmdline params.
+# Order matters: fiq_fsm_enable must precede fiq_enable or the kernel forces
+# it back on. Idempotent — skipped if already present.
+CMDLINE=/boot/firmware/cmdline.txt
+if [[ -f "$CMDLINE" ]]; then
+    if grep -q "dwc_otg.fiq_enable=0" "$CMDLINE"; then
+        echo "  FIQ-disable params already present, skipping"
+    else
+        cp "$CMDLINE" "$CMDLINE.bak-pre-fiq-fix"
+        # cmdline.txt must stay a single line with no trailing newline, or the
+        # Pi won't boot -- printf avoids adding one.
+        printf '%s' "$(cat "$CMDLINE") dwc_otg.fiq_fsm_enable=0 dwc_otg.fiq_enable=0 dwc_otg.nak_holdoff=0" > "$CMDLINE"
+        echo "  FIQ-disable params appended to $CMDLINE (backup: $CMDLINE.bak-pre-fiq-fix)"
+        echo "  NOTE: reboot required for this to take effect. Verify after reboot with:"
+        echo "    dmesg | grep -i otg   # should show 'dwc_otg: FIQ disabled'"
+    fi
+else
+    echo "  $CMDLINE not found (not a Raspberry Pi OS Bookworm boot layout?), skipping"
+fi
+
+echo ""
 echo "=== Done ==="
 echo "Test manually with:"
 echo "  sudo python3 /usr/local/bin/weather-forecast.py --type forecast"

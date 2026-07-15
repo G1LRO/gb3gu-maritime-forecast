@@ -27,7 +27,7 @@ Inspired by [Saytime-Weather-TimeFormat-ASL3](https://github.com/G1LRO/Saytime-W
 - `sox`
 - `espeak-ng` (used only as a phonemizer by Piper — not for synthesis)
 - [Piper TTS](https://github.com/rhasspy/piper) binary for `linux_aarch64` (or `x86_64`)
-- Piper voice model: `en_GB-jenny_dioco-medium`
+- Piper voice model: `en_GB-semaine-medium`
 
 ---
 
@@ -92,10 +92,10 @@ sudo chmod 755 /usr/local/bin/piper-speak
 
 ```bash
 sudo mkdir -p /usr/local/share/piper-voices
-sudo wget -O /usr/local/share/piper-voices/en_GB-jenny_dioco-medium.onnx \
-  https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_GB/jenny_dioco/medium/en_GB-jenny_dioco-medium.onnx
-sudo wget -O /usr/local/share/piper-voices/en_GB-jenny_dioco-medium.onnx.json \
-  https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_GB/jenny_dioco/medium/en_GB-jenny_dioco-medium.onnx.json
+sudo wget -O /usr/local/share/piper-voices/en_GB-semaine-medium.onnx \
+  https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_GB/semaine/medium/en_GB-semaine-medium.onnx
+sudo wget -O /usr/local/share/piper-voices/en_GB-semaine-medium.onnx.json \
+  https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_GB/semaine/medium/en_GB-semaine-medium.onnx.json
 ```
 
 ### 4. Install the script

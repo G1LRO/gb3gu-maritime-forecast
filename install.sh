@@ -69,13 +69,13 @@ echo "  piper-speak wrapper installed"
 echo ""
 echo "=== 3. Voice model ==="
 mkdir -p /usr/local/share/piper-voices
-if [[ -f /usr/local/share/piper-voices/en_GB-jenny_dioco-medium.onnx ]]; then
+if [[ -f /usr/local/share/piper-voices/en_GB-semaine-medium.onnx ]]; then
     echo "  voice model already present, skipping download"
 else
-    wget -q -O /usr/local/share/piper-voices/en_GB-jenny_dioco-medium.onnx \
-        https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_GB/jenny_dioco/medium/en_GB-jenny_dioco-medium.onnx
-    wget -q -O /usr/local/share/piper-voices/en_GB-jenny_dioco-medium.onnx.json \
-        https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_GB/jenny_dioco/medium/en_GB-jenny_dioco-medium.onnx.json
+    wget -q -O /usr/local/share/piper-voices/en_GB-semaine-medium.onnx \
+        https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_GB/semaine/medium/en_GB-semaine-medium.onnx
+    wget -q -O /usr/local/share/piper-voices/en_GB-semaine-medium.onnx.json \
+        https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_GB/semaine/medium/en_GB-semaine-medium.onnx.json
     echo "  voice model downloaded"
 fi
 

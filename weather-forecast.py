@@ -20,6 +20,10 @@ VOICE = "/usr/local/share/piper-voices/en_GB-semaine-medium.onnx"
 ASTERISK = "/usr/sbin/asterisk"
 GAIN_DB = "-10"  # RF-stage output attenuation (sox `gain` effect, on top of -G's clip guard).
                  # More negative = quieter. Set 2026-07-15 after a live listening test on gb3gu.
+LENGTH_SCALE = "1.2"      # Piper phoneme duration; higher = slower speech. Set 2026-07-15 for
+                          # better intelligibility over the air in difficult conditions.
+SENTENCE_SILENCE = "0.6"  # Seconds of silence Piper inserts after each sentence (default 0.2).
+                          # Longer pauses at natural breaks, same reasoning as LENGTH_SCALE above.
 
 
 def _voice_sample_rate(voice_path):
@@ -298,7 +302,8 @@ def speak(announcement_type, maritime_text, temp_sentence):
     log(f"Starting piper (announcement is {len(announcement)} chars)")
 
     piper = subprocess.Popen(
-        [PIPER, "--model", VOICE, "--output-raw"],
+        [PIPER, "--model", VOICE, "--length_scale", LENGTH_SCALE,
+         "--sentence_silence", SENTENCE_SILENCE, "--output-raw"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

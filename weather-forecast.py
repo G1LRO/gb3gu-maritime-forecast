@@ -291,8 +291,11 @@ def speak(announcement_type, maritime_text, temp_sentence):
         # -G (guard): auto-computes just enough gain reduction to prevent the rate-conversion
         # filter from clipping on already-hot piper output (2026-07-15, confirmed via
         # `rate clipped`/`dither clipped` warnings on real broadcast audio hitting -1.0 exactly).
+        # gain -10: on top of -G, drop overall level 10dB -- user judged the -G-only level too
+        # hot for the RF stage by ear (A/B tested locally on als3 node 67954 via real
+        # `rpt localplay`, 2026-07-15).
         ["sox", "-G", "-t", "raw", "-r", "22050", "-e", "signed-integer", "-b", "16", "-c", "1", "-",
-         "-r", "8000", "-c", "1", tmp_path],
+         "-r", "8000", "-c", "1", tmp_path, "gain", "-10"],
         stdin=piper.stdout,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

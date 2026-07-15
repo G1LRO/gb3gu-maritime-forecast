@@ -17,6 +17,8 @@ NODE = "43172"
 PIPER = "/usr/local/bin/piper-speak"
 VOICE = "/usr/local/share/piper-voices/en_GB-jenny_dioco-medium.onnx"
 ASTERISK = "/usr/sbin/asterisk"
+GAIN_DB = "-10"  # RF-stage output attenuation (sox `gain` effect, on top of -G's clip guard).
+                 # More negative = quieter. Set 2026-07-15 after a live listening test on gb3gu.
 # Tried pinning piper off one core + `nice -19` on 2026-07-13 to relieve dwc_otg FIQ/USB
 # interrupt starvation during piper's CPU-heavy inference (see CLAUDE.md gotchas). Reverted:
 # a stuck manual test overran into the next cron firing, and nice -19 caused severe starvation
@@ -295,7 +297,7 @@ def speak(announcement_type, maritime_text, temp_sentence):
         # hot for the RF stage by ear (A/B tested locally on als3 node 67954 via real
         # `rpt localplay`, 2026-07-15).
         ["sox", "-G", "-t", "raw", "-r", "22050", "-e", "signed-integer", "-b", "16", "-c", "1", "-",
-         "-r", "8000", "-c", "1", tmp_path, "gain", "-10"],
+         "-r", "8000", "-c", "1", tmp_path, "gain", GAIN_DB],
         stdin=piper.stdout,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
